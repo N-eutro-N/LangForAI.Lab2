@@ -1,3 +1,5 @@
+import os
+
 current_user_role = 'guest'
 
 def role_required(*allowed_roles):
@@ -94,8 +96,59 @@ def run_task_2():
     print("\n>>> Вызов 4 (новые данные):")
     print(process_list_task("100 50 20 10"))
 
+class safe_write:
+    def __init__(self, filename):
+        self.filename = filename
+        self.saved_content = None
+        self.file_obj = None
+
+    def __enter__(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, 'r', encoding='utf-8') as f:
+                self.saved_content = f.read()
+        self.file_obj = open(self.filename, 'w', encoding='utf-8')
+        return self.file_obj
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file_obj.close()
+        if exc_type is not None:
+            print(f"Во время записи в файл было обнаружено исключение {exc_type.__name__}")
+            if self.saved_content is not None:
+                with open(self.filename, 'w', encoding='utf-8') as f:
+                    f.write(self.saved_content)
+            else:
+                if os.path.exists(self.filename):
+                    os.remove(self.filename)
+            return True
+        return False
+
 def run_task_3():
-    print("\nЗадача 3 (safe_write) – ещё не реализована")
+    print("\nЗадача 3 (Контекстный менеджер safe_write)")
+    filename = 'song.txt'
+
+    print("Тест 1: Успешная запись текста")
+    with safe_write(filename) as f:
+        f.write("Провекра безопасной записи текста\n")
+        f.write("Раз, два, три, раз, два, три\n")
+
+    with open(filename, 'r', encoding='utf-8') as f:
+        print("Содержимое файла:")
+        print(f.read())
+
+    print("Тест 2: Запись с ошибкой (rollback).")
+    try:
+        with safe_write(filename) as f:
+            f.write("ЭТОТ ТЕКСТ НЕ ДОЛЖЕН СОХРАНИТЬСЯ.\n")
+            raise ValueError("Сбой системы!")
+    except Exception:
+        pass
+
+    print("Проверка содержимого после ошибки:")
+    with open(filename, 'r', encoding='utf-8') as f:
+        print(f.read())
+
+    if os.path.exists(filename):
+        os.remove(filename)
 
 def main():
     while True:
