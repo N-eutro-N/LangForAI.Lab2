@@ -1,6 +1,41 @@
+current_user_role = 'guest'
+
+def role_required(*allowed_roles):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if current_user_role in allowed_roles:
+                return func(*args, **kwargs)
+            else:
+                print(f"Доступ запрещен")
+                print(f"Разрешенные роли: {allowed_roles}")
+        return wrapper
+    return decorator
+
+@role_required('admin', 'hr')
+def secret_resource():
+    return ">>> Доступ разрешен."
 
 def run_task_1():
     print("\nЗадача 1 (Права администратора)")
+    global current_user_role
+
+    current_user_role = 'user'
+    print(f"Текущая роль: {current_user_role}")
+    result = secret_resource()
+    if result:
+        print(result)
+
+    current_user_role = 'hr'
+    print(f"Текущая роль: {current_user_role}")
+    result = secret_resource()
+    if result:
+        print(result)
+
+    current_user_role = 'admin'
+    print(f"Текущая роль: {current_user_role}")
+    result = secret_resource()
+    if result:
+        print(result)
 
 def run_task_2():
     print("\nЗадача 2 (Кэширование)")
